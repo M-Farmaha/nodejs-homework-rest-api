@@ -18,3 +18,10 @@ export const usersLoginSchema = Joi.object({
   "string.empty": "{#key} cannot be an empty field",
   "any.required": "missing required {#key} field",
 });
+
+export const updateUserSubscriptionSchema = Joi.object({
+  subscription: Joi.string().required(),
+}).messages({
+  "string.base": "{#key} must be a string",
+  "any.required": "missing required {#key} field",
+});
