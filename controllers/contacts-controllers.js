@@ -1,10 +1,19 @@
 import Contact from "../models/contact.js";
 
-import { HttpError } from "../helpers/index.js";
+import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../decorators/ctrlWrapper.js";
 
 const getAll = async (req, res) => {
-  const result = await Contact.find();
+  const { _id: owner } = req.user;
+  const { page = 1, limit = 20, favorite } = req.query;
+  const skip = (page - 1) * limit;
+  const favoriteFilter = favorite ? { favorite } : undefined;
+
+  const result = await Contact.find(
+    { owner, ...favoriteFilter },
+    {},
+    { skip, limit }
+  );
   res.json(result);
 };
 
@@ -18,7 +27,8 @@ const getById = async (req, res) => {
 };
 
 const add = async (req, res) => {
-  const result = await Contact.create(req.body);
+  const { _id: owner } = req.user;
+  const result = await Contact.create({ ...req.body, owner });
   res.status(201).json(result);
 };
 
