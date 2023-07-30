@@ -14,5 +14,6 @@ export const contactsSchema = Joi.object({
 export const updateFavoriteSchema = Joi.object({
   favorite: Joi.boolean().required(),
 }).messages({
+  "boolean.base": "{#key} must be a boolean",
   "any.required": "missing required {#key} field",
 });
