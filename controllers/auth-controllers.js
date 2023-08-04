@@ -1,6 +1,10 @@
 import User from "../models/user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import fs from "fs/promises";
+import path from "path";
+import gravatar from "gravatar";
+import Jimp from "jimp";
 
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../decorators/ctrlWrapper.js";
@@ -13,7 +17,13 @@ const register = async (req, res) => {
   }
   const hashPassword = await bcrypt.hash(password, 10);
 
-  const newUser = await User.create({ ...req.body, password: hashPassword });
+  const avatarURL = gravatar.url(email);
+
+  const newUser = await User.create({
+    ...req.body,
+    password: hashPassword,
+    avatarURL,
+  });
 
   res.status(201).json({
     user: {
@@ -81,10 +91,46 @@ const updateSubscription = async (req, res) => {
   });
 };
 
+const updateAvatar = async (req, res) => {
+  const { _id } = req.user;
+
+  const avatarsDirPath = path.resolve("public", "avatars");
+
+  const { path: oldFilePath, originalname } = req.file;
+
+  try {
+    const image = await Jimp.read(oldFilePath);
+    await image.resize(250, 250).writeAsync(oldFilePath);
+  } catch (error) {
+    throw error;
+  }
+
+  const fileExtention = originalname.split(".").reverse()[0];
+
+  const newFileName = `${_id}.${fileExtention}`;
+
+  const newFilePath = path.join(avatarsDirPath, newFileName);
+
+  await fs.rename(oldFilePath, newFilePath);
+
+  const avatarURL = path.join("avatars", newFileName);
+
+  const result = await User.findByIdAndUpdate(_id, { avatarURL });
+
+  if (!result) {
+    throw HttpError(404);
+  }
+
+  res.json({
+    avatarURL,
+  });
+};
+
 export default {
   register: ctrlWrapper(register),
   login: ctrlWrapper(login),
   getCurrent: ctrlWrapper(getCurrent),
   logout: ctrlWrapper(logout),
   updateSubscription: ctrlWrapper(updateSubscription),
+  updateAvatar: ctrlWrapper(updateAvatar),
 };
