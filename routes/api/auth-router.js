@@ -5,6 +5,7 @@ import authControllers from "../../controllers/auth-controllers.js";
 import validateBody from "../../decorators/validateBody.js";
 import {
   usersRegisterSchema,
+  usersEmailSchema,
   usersLoginSchema,
   updateUserSubscriptionSchema,
 } from "../../schemas/users-schemas.js";
@@ -18,6 +19,14 @@ authRouter.post(
   "/register",
   validateBody(usersRegisterSchema),
   authControllers.register
+);
+
+authRouter.get("/verify/:verificationToken", authControllers.verify);
+
+authRouter.post(
+  "/verify",
+  validateBody(usersEmailSchema),
+  authControllers.resendEmail
 );
 
 authRouter.post(
